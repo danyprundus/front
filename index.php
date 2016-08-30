@@ -2,7 +2,10 @@
 require "inc/header.php";
 require "classes/finance.php";
 require "classes/builder.php";
-
+if($_GET['command']=='reset'){
+    session_destroy();
+    print_r($_SESSION);
+}
 ?>
 
 <body>

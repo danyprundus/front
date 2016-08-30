@@ -62,9 +62,17 @@ class builder
         <tr>
             <?
             foreach ($array as $key => $val) {
+              if(is_object($val)){
+                  $title=$val->name;
+
+              }
+              else{
+                  $title=$val;
+              }
+
                 ?>
 
-                <th><? echo $val ?></th>
+                <th><? echo $title ?></th>
 
 
                 <?
@@ -84,9 +92,10 @@ class builder
             foreach ($array as $key => $val) {
                 ?>
 
-                <td><input type="text"
-                           name="<?php echo $key ?>" <? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
-                           class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>"></td>
+                <td>
+                    <?$this->buildFields($key,$blockedArray,$val,$extraClass)?>
+
+                </td>
                 <?php
 
             }
@@ -95,5 +104,31 @@ class builder
         <tr>
         <?
         echo '</tr>';
+    }
+
+    public function buildFields($key,$blockedArray,$val,$extraClass)
+    {
+
+
+        if(is_object($val)) {
+               $params=(array) $val->params;
+             ?>
+            <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?> class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
+                <? foreach($params as $param_key=>$param_val):?>
+                    <option value="<?=$param_val?>"><?=$param_val?></option>
+                <?endforeach;?>
+            </select>
+
+
+            <?
+        }
+        else{
+            ?>
+            <input type="text"
+                   name="<?php echo $key ?>" <? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
+                   class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
+            <?
+        }
+
     }
 }
