@@ -109,18 +109,24 @@ class builder
     public function buildFields($key,$blockedArray,$val,$extraClass)
     {
 
-
-        if(is_object($val)) {
+       if(is_object($val)) {
                $params=(array) $val->params;
-             ?>
-            <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?> class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
-                <? foreach($params as $param_key=>$param_val):?>
-                    <option value="<?=$param_val?>"><?=$param_val?></option>
-                <?endforeach;?>
-            </select>
+       
+           switch ((string) $val->field_type)
+           {
+               case 'dropdown':           ?>
+                   <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?> class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
+                       <? foreach($params as $param_key=>$param_val):?>
+                           <option value="<?=$param_val?>"><?=$param_val?></option>
+                       <?endforeach;?>
+                   </select>
 
 
-            <?
+                   <? break;
+
+           }
+
+
         }
         else{
             ?>
