@@ -21,13 +21,7 @@ class finance
 
     public function getParam($slug)
     {
-        if (@strlen($this->getJson()) > 0) {
-
-            // return ;
-        } else {
-            $this->GetParams();
-
-        }
+        $this->GetParams();
 
         $params = $this->getJson();
         $return = array();
@@ -55,7 +49,12 @@ class finance
 
     public function GetParams()
     {
-        $this->setJson(file_get_contents("http://daniel.dev/slim/src/public/finance/params"));
+        if(empty($_SESSION['params']))
+        {
+            $_SESSION['params']=file_get_contents("http://daniel.dev/slim/src/public/finance/params");
+        }
+        $this->setJson( $_SESSION['params']);
+
     }
 
     public function financeOptions()
