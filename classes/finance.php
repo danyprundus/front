@@ -95,4 +95,10 @@ class finance
     {
         return $this->getParam(__FUNCTION__);
     }
+
+    public function financeProductAddOptions()
+    {
+        return $this->getParam(__FUNCTION__);
+    }
+
 }

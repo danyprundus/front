@@ -54,7 +54,7 @@ class builder
         }
     }
 
-    public function outputClientiHeader($array, $extraClass = "", $blockedArray = array())
+    public function outputClientiHeader($array, $extraClass = "", $blockedArray = array(),$submitButtonClass=" btn-danger ",$submitButtonValue="Adaug")
     {
         ?>
 
@@ -86,7 +86,7 @@ class builder
         </tr>
         </thead>
     <tbody class="<?= $extraClass ?>">
-        <tr id="clientiStart">
+        <tr>
 
             <?
             foreach ($array as $key => $val) {
@@ -100,7 +100,7 @@ class builder
 
             }
             ?>
-            <td><input type="button" class="btn btn-danger " id="adaug" value="Adaug"></td>
+            <td><input type="button" class="btn <?=$submitButtonClass?>" id="adaug" value="<?=$submitButtonValue?>"></td>
         <tr>
         <?
         echo '</tr>';
@@ -111,7 +111,7 @@ class builder
 
        if(is_object($val)) {
                $params=(array) $val->params;
-       
+
            switch ((string) $val->field_type)
            {
                case 'dropdown':           ?>

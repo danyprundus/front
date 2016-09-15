@@ -3,7 +3,7 @@ $(function() {
     $('#side-menu').metisMenu();
 
 });
-
+var ApiUrl="http://daniel.dev/slim/src/public/";
 //Loads the correct sidebar on window load,
 //collapses the sidebar on window resize.
 // Sets the min-height of #page-wrapper to window size
@@ -60,7 +60,7 @@ $("#financiarForm").submit(function(e){
     var formData=form_to_json(".operatiune ."+option);
 
     $.ajax({
-        url: 'http://daniel.dev/slim/src/public/finance/monetar/data='+JSON.stringify(formData)+'/option='+option,
+        url: ApiUrl+'finance/monetar/data='+JSON.stringify(formData)+'/option='+option,
         type: 'GET',
        // dataType: 'json',
         success: function(data) {
@@ -86,11 +86,11 @@ $("#financiarForm").submit(function(e){
     return false;
 
 });
-$("#adaug").click(function(){
+$("#clientiStart #adaug").click(function(){
     var formData=form_to_json(".clienti ");
 
     $.ajax({
-        url: 'http://daniel.dev/slim/src/public/finance/client/data='+JSON.stringify(formData)+'/option=add',
+        url: ApiUrl+'finance/client/data='+JSON.stringify(formData)+'/option=add',
         type: 'GET',
         // dataType: 'json',
         success: function(data) {
@@ -118,7 +118,7 @@ $("#adaug").click(function(){
 
 function calculateClient(id){
     $.ajax({
-        url: 'http://daniel.dev/slim/src/public/finance/client/'+ id +'/option=calculate',
+        url: ApiUrl+'finance/client/'+ id +'/option=calculate',
         type: 'POST',
         // dataType: 'json',
         success: function(data) {
@@ -147,17 +147,181 @@ $( document ).ready(function() {
 
     if ( $('.client-data').length > 0 ) {
         loadClients(1);
-    }else if( $('.product-data').length > 0)  {
-        loadProducts(1);
-
-
     }
-
 });
+
+$(".barcodeID").blur(function(){
+    toggleSubmit("hide");
+    var barcode=$(this).val();
+    $(this).val("");
+    var playground=1
+    var addedBy=1
+    var Added=0;
+    $.ajax({
+        url: ApiUrl+'finance/inventory/checkProduct/'+playground+'/'+barcode,
+        type: 'GET',
+        async: false,
+        success: function(data) {
+            var obj = $.parseJSON(data);
+            var op=obj.operation;
+
+            if(op==='ok'){
+
+                $("#extraData").html(" Produs: "+$.parseJSON(obj.data).name);
+                $("#extraData").append(" Cantitate "+qtyProduct(playground,barcode));
+
+            }
+            else {
+
+                $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
+            }
+            toggleSubmit("show");
+            $("tbody.productAdd>tr:nth-child(1)>td:nth-child(3)>#adaug").click(function(){
+
+                if(op==='ok'){
+                    if(Added==0){
+                        addProduct(barcode,playground,addedBy,$(".qty").val());
+                    }
+                    Added=1;
+
+                }
+                else {
+                    var name=$("#extraData input[name='name']").val();
+                    var price=$("#extraData input[name='price']").val();
+                    if(name.length>0 & price.length>0){
+                        createProduct(barcode,playground,addedBy,name,price);
+                    }
+
+
+                }
+                $("#extraData").html("");
+                toggleSubmit("hide");
+
+            })
+        }
+    });
+
+//console.log(jsonArray);
+})
+    $(".productRemove").blur(function(){
+        toggleSubmit("hide");
+        var barcode=$(this).val();
+        $(this).val("");
+        var playground=1
+        var addedBy=1
+        $.ajax({
+            url: ApiUrl+'finance/inventory/checkProduct/'+playground+'/'+barcode,
+            type: 'GET',
+            async: false,
+            success: function(data) {
+                var obj = $.parseJSON(data);
+                var op=obj.operation;
+
+                if(op==='ok'){
+                    qty= qtyProduct(playground,barcode);
+
+                    $("#extraData").html("<span class='product-name'>Produs: "+$.parseJSON(obj.data).name)+"</span>";
+                    $("#extraData").append("<span class='product-qty'>Cantitate:"+qty+" </span>");
+                    if(qty>0){
+                        toggleSubmit("show");
+                    }
+                    else
+                    {   toggleSubmit("hide");}
+
+
+                }
+                else {
+
+                    $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
+                    toggleSubmit("show");
+                }
+
+                $("tbody.productRemove>tr:nth-child(1)>td:nth-child(2)>#adaug").click(function(){
+                    if(op==='ok'){
+                        addProduct(barcode,playground,addedBy,-1);
+                    }
+
+                    $("#extraData").html("");
+                    toggleSubmit("hide");
+
+                })
+            }
+        });
+
+//console.log(jsonArray);
+    })
+
+
+
+function qtyProduct(playground,barcode){
+var op=""
+
+var qty=""
+    $.ajax({
+        url: ApiUrl+'finance/inventory/totalProduct/'+playground+'/'+barcode,
+        type: 'GET',
+        async: false,
+        success: function(data) {
+            var obj = $.parseJSON(data);
+            op=obj.operation;
+            if(op==="ok"){
+
+                qty=$.parseJSON(obj.data).qty;
+
+
+            }
+        }
+    });
+return qty;
+}
+function doReturn(value,where){
+    console.log(value);
+    return value;
+}
+function addProduct(barcode,playground,addedBy,qty){
+
+    $.ajax({
+        url: ApiUrl+'finance/inventory/addProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+qty,
+        type: 'GET',
+        success: function(data) {
+            var obj = $.parseJSON(data);
+            var op=obj.operation;
+            if(op==='ok'){
+                if(qty>0)
+                    $("#extraData").html("Adaugat "+ qty+" bucati");
+                else
+                    $("#extraData").html("Sters 1 bucata");
+            }
+            else {
+                $("#extraData").html("Numele si pretul trebuie completat");
+            }
+        }
+    });
+
+}
+function createProduct(barcode,playground,addedBy,name,price){
+    $.ajax({
+        url: ApiUrl+'finance/inventory/addProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+name+'/'+price,
+        type: 'GET',
+        success: function(data) {
+            var obj = $.parseJSON(data);
+            var op=obj.operation;
+            if(op==='ok'){
+                $("#extraData").html("Adaugat");
+
+            }
+            else {
+                $("#extraData").html("Numele si pretul trebuie completat");
+            }
+        }
+    });
+
+}
+
 function loadClients(playgroundID)
 {
     $.ajax({
-        url: 'http://daniel.dev/slim/src/public/finance/client/getall/plagroundID='+playgroundID,
+        url: ApiUrl+'finance/client/getall/plagroundID='+playgroundID,
         type: 'GET',
         // dataType: 'json',
         success: function(data) {
@@ -186,7 +350,7 @@ function loadClients(playgroundID)
 function loadProducts(playgroundID)
 {
     $.ajax({
-        url: 'http://daniel.dev/slim/src/public/finance/inventory/getall/plagroundID='+playgroundID,
+        url: ApiUrl+'finance/inventory/getall/plagroundID='+playgroundID,
         type: 'GET',
         // dataType: 'json',
         success: function(data) {
@@ -224,7 +388,8 @@ function generateDefaultTR(fields,afterID,trClass){
          cnt++;
 
      });
-    console.log(afterID);
+
+
 
     $("#"+ afterID).after(tr);
 }
@@ -251,4 +416,12 @@ function form_to_json (selector) {
     var obj = {};
     for (var a = 0; a < ary.length; a++) obj[ary[a].name] = ary[a].value;
     return obj;
+}
+function toggleSubmit(option){
+    if(option==='hide')
+        $("#adaug").hide();
+    else
+        $("#adaug").show();
+
+
 }

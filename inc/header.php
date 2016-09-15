@@ -1,5 +1,7 @@
 <?
 session_start();
+define(API_URL,'http://daniel.dev/slim/src/public/');
+define(Playground,'1');
 ?>
 <!DOCTYPE html>
 <html lang="en">
