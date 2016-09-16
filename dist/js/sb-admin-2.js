@@ -339,9 +339,10 @@ function loadClients(playgroundID)
                 details= $.parseJSON(value.data).detalii;
                 consum=value.cost;
                 consumed=value.consumed;
+                total_general=value.total_general;
                 price=value.price;
                 exit=value.exitTime;
-                generateClientTR(id,name,entry,details,consum,price,exit,consumed);
+                generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general);
             });
 
 
@@ -397,7 +398,7 @@ function generateDefaultTR(fields,afterID,trClass){
     $("#"+ afterID).after(tr);
 }
 
-function generateClientTR(id,name,entry,details,consum,price,exit,consumed)
+function generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general)
 {
     var tr=' <tr class=" clientDataRow row_"' + id + '>\
         <td></td>\
@@ -415,7 +416,7 @@ function generateClientTR(id,name,entry,details,consum,price,exit,consumed)
     if(exit=='00:00:00')
           tr+='<td><input type="button" class="btn btn-danger inchidClient" onclick="calculateClient('+ id +')" clientID="'+ id +'" value="Inchid"> </td></tr> ';
     else
-        tr+='<td></td>';
+        tr+='<td>'+total_general+'</td>';
     $(".clienti").append(tr);
 
 }
