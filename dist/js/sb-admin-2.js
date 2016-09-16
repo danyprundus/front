@@ -4,6 +4,7 @@ $(function() {
 
 });
 var ApiUrl="http://daniel.dev/slim/src/public/";
+var MainPlayground=1;
 //Loads the correct sidebar on window load,
 //collapses the sidebar on window resize.
 // Sets the min-height of #page-wrapper to window size
@@ -103,7 +104,7 @@ $(".clienti #adaug").click(function(){
             });
 
             if(dataArray[0]=='Yes'){
-                loadClients(1);
+                loadClients(MainPlayground);
                 console.log('dialog OK');
                 $("#alert-dimissable-text").html("Operatie reusita");
                 $(".alert-dismissable").removeClass("hide");
@@ -118,7 +119,7 @@ $(".clienti #adaug").click(function(){
 
 function calculateClient(id){
     $.ajax({
-        url: ApiUrl+'finance/client/'+ id +'/option=calculate',
+        url: ApiUrl+'finance/client/1/'+ id +'/calculate',
         type: 'POST',
         // dataType: 'json',
         success: function(data) {
@@ -131,7 +132,7 @@ function calculateClient(id){
             });
 
             if(dataArray[0]=='Yes'){
-                loadClients(1);
+                loadClients(MainPlayground);
                 console.log('dialog OK');
                 $("#alert-dimissable-text").html("Operatie reusita");
                 $(".alert-dismissable").removeClass("hide");
@@ -146,7 +147,7 @@ function calculateClient(id){
 $( document ).ready(function() {
 
     if ( $('.client-data').length > 0 ) {
-        loadClients(1);
+        loadClients(MainPlayground);
     }
 });
 
@@ -154,11 +155,11 @@ $(".barcodeID").blur(function(){
     toggleSubmit("hide");
     var barcode=$(this).val();
     $(this).val("");
-    var playground=1
+
     var addedBy=1
     var Added=0;
     $.ajax({
-        url: ApiUrl+'finance/inventory/checkProduct/'+playground+'/'+barcode,
+        url: ApiUrl+'finance/inventory/checkProduct/'+MainPlayground+'/'+barcode,
         type: 'GET',
         async: false,
         success: function(data) {
@@ -168,7 +169,7 @@ $(".barcodeID").blur(function(){
             if(op==='ok'){
 
                 $("#extraData").html(" Produs: "+$.parseJSON(obj.data).name);
-                $("#extraData").append(" Cantitate "+qtyProduct(playground,barcode));
+                $("#extraData").append(" Cantitate "+qtyProduct(MainPlayground,barcode));
 
             }
             else {
@@ -180,7 +181,7 @@ $(".barcodeID").blur(function(){
 
                 if(op==='ok'){
                     if(Added==0){
-                        addProduct(barcode,playground,addedBy,$(".qty").val());
+                        addProduct(barcode,MainPlayground,addedBy,$(".qty").val());
                     }
                     Added=1;
 
@@ -189,7 +190,7 @@ $(".barcodeID").blur(function(){
                     var name=$("#extraData input[name='name']").val();
                     var price=$("#extraData input[name='price']").val();
                     if(name.length>0 & price.length>0){
-                        createProduct(barcode,playground,addedBy,name,price);
+                        createProduct(barcode,MainPlayground,addedBy,name,price);
                     }
 
 
@@ -207,10 +208,10 @@ $(".barcodeID").blur(function(){
         toggleSubmit("hide");
         var barcode=$(this).val();
         $(this).val("");
-        var playground=1
+
         var addedBy=1
         $.ajax({
-            url: ApiUrl+'finance/inventory/checkProduct/'+playground+'/'+barcode,
+            url: ApiUrl+'finance/inventory/checkProduct/'+MainPlayground+'/'+barcode,
             type: 'GET',
             async: false,
             success: function(data) {
@@ -218,7 +219,7 @@ $(".barcodeID").blur(function(){
                 var op=obj.operation;
 
                 if(op==='ok'){
-                    qty= qtyProduct(playground,barcode);
+                    qty= qtyProduct(MainPlayground,barcode);
 
                     $("#extraData").html("<span class='product-name'>Produs: "+$.parseJSON(obj.data).name)+"</span>";
                     $("#extraData").append("<span class='product-qty'>Cantitate:"+qty+" </span>");
@@ -238,7 +239,7 @@ $(".barcodeID").blur(function(){
 
                 $("tbody.productRemove>tr:nth-child(1)>td:nth-child(2)>#adaug").click(function(){
                     if(op==='ok'){
-                        addProduct(barcode,playground,addedBy,-1);
+                        addProduct(barcode,MainPlayground,addedBy,-1);
                     }
 
                     $("#extraData").html("");
@@ -337,9 +338,10 @@ function loadClients(playgroundID)
                 entry=value.time;
                 details= $.parseJSON(value.data).detalii;
                 consum=value.cost;
+                consumed=value.consumed;
                 price=value.price;
                 exit=value.exitTime;
-                generateClientTR(id,name,entry,details,consum,price,exit);
+                generateClientTR(id,name,entry,details,consum,price,exit,consumed);
             });
 
 
@@ -395,19 +397,25 @@ function generateDefaultTR(fields,afterID,trClass){
     $("#"+ afterID).after(tr);
 }
 
-function generateClientTR(id,name,entry,details,consum,price,exit)
+function generateClientTR(id,name,entry,details,consum,price,exit,consumed)
 {
     var tr=' <tr class=" clientDataRow row_"' + id + '>\
         <td></td>\
     <td>' + name + '</td>\
     <td>' + entry + '</td>\
-    <td>' + details + '<input type="text" class="form-control" name="barCode" rel="'+id+'"></td>\
-    <td>' + consum + '</td>\
-    <td>' + price + '</td>\
-    <td>' + exit + '</td>\
-    <td><input type="button" class="btn btn-danger inchidClient" onclick="calculateClient('+ id +')" clientID="'+ id +'" value="Inchid"> </td>\
-    </tr>   ';
+    <td>' + details ;
+    if(exit=='00:00:00'){
+        tr+='<input type="text" class="form-control" name="barCode" rel="'+id+'">'
+    }
 
+    tr+='</td>\
+    <td>' + consum + '<br>'+consumed+'</td>\
+    <td>' + price + '</td>\
+    <td>' + exit + '</td>';
+    if(exit=='00:00:00')
+          tr+='<td><input type="button" class="btn btn-danger inchidClient" onclick="calculateClient('+ id +')" clientID="'+ id +'" value="Inchid"> </td></tr> ';
+    else
+        tr+='<td></td>';
     $(".clienti").append(tr);
 
 }
