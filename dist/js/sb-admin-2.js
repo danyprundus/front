@@ -86,7 +86,7 @@ $("#financiarForm").submit(function(e){
     return false;
 
 });
-$("#clientiStart #adaug").click(function(){
+$(".clienti #adaug").click(function(){
     var formData=form_to_json(".clienti ");
 
     $.ajax({
@@ -320,6 +320,7 @@ function createProduct(barcode,playground,addedBy,name,price){
 
 function loadClients(playgroundID)
 {
+
     $.ajax({
         url: ApiUrl+'finance/client/getall/plagroundID='+playgroundID,
         type: 'GET',
@@ -335,9 +336,9 @@ function loadClients(playgroundID)
                 name=value.name;
                 entry=value.time;
                 details= $.parseJSON(value.data).detalii;
-                consum=value.price;
+                consum=value.cost;
                 price=value.price;
-                exit=value.exit;
+                exit=value.exitTime;
                 generateClientTR(id,name,entry,details,consum,price,exit);
             });
 
@@ -400,14 +401,14 @@ function generateClientTR(id,name,entry,details,consum,price,exit)
         <td></td>\
     <td>' + name + '</td>\
     <td>' + entry + '</td>\
-    <td>' + details + '</td>\
+    <td>' + details + '<input type="text" class="form-control" name="barCode" rel="'+id+'"></td>\
     <td>' + consum + '</td>\
     <td>' + price + '</td>\
     <td>' + exit + '</td>\
     <td><input type="button" class="btn btn-danger inchidClient" onclick="calculateClient('+ id +')" clientID="'+ id +'" value="Inchid"> </td>\
     </tr>   ';
 
-    $("#clientiStart").after(tr);
+    $(".clienti").append(tr);
 
 }
 

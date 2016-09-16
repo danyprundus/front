@@ -38,7 +38,7 @@ $builder= new \builder\builder();
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered table-hover">
                          <?php
-                          $builder->outputClientiHeader($finance->financeClientiOptions(),"clienti");
+                          $builder->outputClientiHeader($finance->financeClientiOptions(),"clienti",array("intrare",'id','consum','pret','iesire'));
                          ?>
                             </table>
                         </div>
