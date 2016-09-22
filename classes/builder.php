@@ -54,7 +54,7 @@ class builder
         }
     }
 
-    public function outputClientiHeader($array, $extraClass = "", $blockedArray = array(),$submitButtonClass=" btn-danger ",$submitButtonValue="Adaug")
+    public function outputClientiHeader($array, $extraClass = "", $blockedArray = array(),$submitButtonClass=" btn-danger ",$submitButtonValue="Adaug",$hideHidden=false)
     {
         ?>
 
@@ -93,7 +93,7 @@ class builder
                 ?>
 
                 <td>
-                    <?$this->buildFields($key,$blockedArray,$val,$extraClass)?>
+                    <?$this->buildFields($key,$blockedArray,$val,$extraClass,$hideHidden)?>
 
                 </td>
                 <?php
@@ -106,35 +106,34 @@ class builder
         echo '</tr>';
     }
 
-    public function buildFields($key,$blockedArray,$val,$extraClass)
+    public function buildFields($key,$blockedArray,$val,$extraClass,$hideHidden=false)
     {
+        if (!in_array($key, $blockedArray) ) {
+            if (is_object($val)) {
+                $params = (array)$val->params;
 
-       if(is_object($val)) {
-               $params=(array) $val->params;
-
-           switch ((string) $val->field_type)
-           {
-               case 'dropdown':           ?>
-                   <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?> class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
-                       <? foreach($params as $param_key=>$param_val):?>
-                           <option value="<?=$param_val?>"><?=$param_val?></option>
-                       <?endforeach;?>
-                   </select>
-
-
-                   <? break;
-
-           }
+                switch ((string)$val->field_type) {
+                    case 'dropdown': ?>
+                        <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
+                                class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
+                            <? foreach ($params as $param_key => $param_val): ?>
+                                <option value="<?= $param_val ?>"><?= $param_val ?></option>
+                            <?endforeach; ?>
+                        </select>
 
 
+                        <? break;
+
+                }
+
+
+            } else {
+                ?>
+                <input type="text"
+                       name="<?php echo $key ?>" <? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
+                       class="form-control input-xs input-group-xs <?php echo $extraClass . ' ' . $key ?>">
+                <?
+            }
         }
-        else{
-            ?>
-            <input type="text"
-                   name="<?php echo $key ?>" <? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
-                   class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
-            <?
-        }
-
     }
 }

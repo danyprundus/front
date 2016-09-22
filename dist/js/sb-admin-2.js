@@ -3,8 +3,6 @@ $(function() {
     $('#side-menu').metisMenu();
 
 });
-var ApiUrl="http://daniel.dev/slim/src/public/";
-var MainPlayground=1;
 //Loads the correct sidebar on window load,
 //collapses the sidebar on window resize.
 // Sets the min-height of #page-wrapper to window size
@@ -104,6 +102,7 @@ $(".clienti #adaug").click(function(){
             });
 
             if(dataArray[0]=='Yes'){
+
                 loadClients(MainPlayground);
                 console.log('dialog OK');
                 $("#alert-dimissable-text").html("Operatie reusita");
@@ -131,8 +130,7 @@ function calculateClient(id){
                 dataArray.push([ value ]);
             });
 
-            if(dataArray[0]=='Yes'){
-                loadClients(MainPlayground);
+            if(obj.operation=='ok'){
                 console.log('dialog OK');
                 $("#alert-dimissable-text").html("Operatie reusita");
                 $(".alert-dismissable").removeClass("hide");
@@ -141,7 +139,7 @@ function calculateClient(id){
         }
     });
 
-
+    loadClients(MainPlayground);
 
 }
 $( document ).ready(function() {
@@ -151,7 +149,7 @@ $( document ).ready(function() {
     }
 });
 
-$(".barcodeID").blur(function(){
+$(".productAdd .barcodeID").blur(function(){
     toggleSubmit("hide");
     var barcode=$(this).val();
     $(this).val("");
@@ -169,7 +167,7 @@ $(".barcodeID").blur(function(){
             if(op==='ok'){
 
                 $("#extraData").html(" Produs: "+$.parseJSON(obj.data).name);
-                $("#extraData").append(" Cantitate "+qtyProduct(MainPlayground,barcode));
+                $("#extraData").append(" <br>Cantitate "+qtyProduct(MainPlayground,barcode));
 
             }
             else {
@@ -178,10 +176,9 @@ $(".barcodeID").blur(function(){
             }
             toggleSubmit("show");
             $("tbody.productAdd>tr:nth-child(1)>td:nth-child(3)>#adaug").click(function(){
-
                 if(op==='ok'){
                     if(Added==0){
-                        addProduct(barcode,MainPlayground,addedBy,$(".qty").val());
+                        addProduct(barcode,MainPlayground,addedBy,$(".qty").val(),0);
                     }
                     Added=1;
 
@@ -199,12 +196,14 @@ $(".barcodeID").blur(function(){
                 toggleSubmit("hide");
 
             })
+            loadProducts(MainPlayground);
+
         }
     });
 
 //console.log(jsonArray);
 })
-    $(".productRemove").blur(function(){
+    $(".productRemove .barcodeID").blur(function(){
         toggleSubmit("hide");
         var barcode=$(this).val();
         $(this).val("");
@@ -223,6 +222,7 @@ $(".barcodeID").blur(function(){
 
                     $("#extraData").html("<span class='product-name'>Produs: "+$.parseJSON(obj.data).name)+"</span>";
                     $("#extraData").append("<span class='product-qty'>Cantitate:"+qty+" </span>");
+
                     if(qty>0){
                         toggleSubmit("show");
                     }
@@ -237,15 +237,15 @@ $(".barcodeID").blur(function(){
                     toggleSubmit("show");
                 }
 
-                $("tbody.productRemove>tr:nth-child(1)>td:nth-child(2)>#adaug").click(function(){
+                $(document).on('click', 'tbody.productRemove>tr:nth-child(1)>td:nth-child(2)>#adaug', function() {
                     if(op==='ok'){
-                        addProduct(barcode,MainPlayground,addedBy,-1);
+                        addProduct(barcode,MainPlayground,addedBy,-1,0);
                     }
 
                     $("#extraData").html("");
                     toggleSubmit("hide");
-
-                })
+                });
+                loadProducts(MainPlayground);
             }
         });
 
@@ -279,30 +279,54 @@ function doReturn(value,where){
     console.log(value);
     return value;
 }
-function addProduct(barcode,playground,addedBy,qty){
+function addProduct(barcode,playground,addedBy,qty,clientID){
 
     $.ajax({
-        url: ApiUrl+'finance/inventory/addProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+qty,
+        url: ApiUrl+'finance/inventory/checkProduct/'+MainPlayground+'/'+barcode,
         type: 'GET',
+        async: false,
         success: function(data) {
             var obj = $.parseJSON(data);
             var op=obj.operation;
+
             if(op==='ok'){
-                if(qty>0)
-                    $("#extraData").html("Adaugat "+ qty+" bucati");
-                else
-                    $("#extraData").html("Sters 1 bucata");
+
+                $("#extraData").html(" Produs: "+$.parseJSON(obj.data).name);
+                $("#extraData").append(" <br>Cantitate "+qtyProduct(MainPlayground,barcode));
+                var txt;
+                var r = confirm("Cumpara "+ $.parseJSON(obj.data).name+' din care mai sunt '+qtyProduct(MainPlayground,barcode)+' bucati');
+                if (r == true) {
+                    $.ajax({
+                        url: ApiUrl+'finance/inventory/addProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+qty+'/'+clientID,
+                        type: 'GET',
+                        success: function(data) {
+                            var obj = $.parseJSON(data);
+                            var op=obj.operation;
+                            if(op==='ok'){
+                                if(qty>0)
+                                    $("#extraData").html("Adaugat "+ qty+" bucati");
+                                else
+                                    $("#extraData").html("Sters 1 bucata");
+                            }
+                            else {
+                                $("#extraData").html("Numele si pretul trebuie completat");
+                            }
+                        }
+                    });                }
             }
             else {
-                $("#extraData").html("Numele si pretul trebuie completat");
+
+                $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
             }
         }
     });
 
+
+
 }
 function createProduct(barcode,playground,addedBy,name,price){
     $.ajax({
-        url: ApiUrl+'finance/inventory/addProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+name+'/'+price,
+        url: ApiUrl+'finance/inventory/createProduct/'+playground+'/'+barcode+'/'+addedBy+'/'+name+'/'+price,
         type: 'GET',
         success: function(data) {
             var obj = $.parseJSON(data);
@@ -348,7 +372,7 @@ function loadClients(playgroundID)
 
         }
     });
-
+    $('.clienti').find('input:text').val('');
 }
 
 function loadProducts(playgroundID)
@@ -397,20 +421,73 @@ function generateDefaultTR(fields,afterID,trClass){
 
     $("#"+ afterID).after(tr);
 }
+$(document).on('change', '.barCodeConsumCLient', function() {
+//add a product to a client
+    // Does some stuff and logs the event to the console
+    var value=$(this).val();
+    var clientID=$(this).attr("rel");
+
+    addProduct(value,MainPlayground,addedBy,-1,clientID);
+    loadClients(MainPlayground);
+
+});
+/*
+$(document).on('change', '.clientNotes', function() {
+//add a product to a client
+    // Does some stuff and logs the event to the console
+    var value=$(this).val();
+    var clientID=$(this).attr("rel");
+
+    updateClientDetails(value,MainPlayground,addedBy,clientID);
+    loadClients(MainPlayground);
+
+});
+*/
+function updateClientDetails(details,clientID){
+    console.log("update");
+    $.ajax({
+        url: ApiUrl+'finance/client/'+clientID+'/comment/'+details,
+        type: 'GET',
+        // dataType: 'json',
+        success: function(data) {
+            console.log('finance/client/'+clientID+'/comment/'+details);
+            loadClients(MainPlayground);
+        }
+    });
+
+
+}
 
 function generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general)
 {
     var tr=' <tr class=" clientDataRow row_"' + id + '>\
         <td></td>\
     <td>' + name + '</td>\
-    <td>' + entry + '</td>\
-    <td>' + details ;
+    <td>' + entry + '</td>';
     if(exit=='00:00:00'){
-        tr+='<input type="text" class="form-control" name="barCode" rel="'+id+'">'
+        tr+='<td>' +'<a  class="client-comments" rel="'+id+'">'+details+'</a>'
+
     }
+    else{
+        tr+='<td>' +details
+    }
+    tr+='<div class="col-lg-12"><textarea  class="client-comments hide" rel="'+id+'">'+details+'</textarea></div>\
+    <div class="col-lg-12"><input type="button" class="btn btn-info hide client-comments" rel="'+id+'" value="Salveaza comentariu" ></div>'
+    tr+='</td>\
+    <td>' ;
+    if(exit=='00:00:00'){
+        tr+='<div class="col-lg-12"><div class="form-group input-group"><span class="input-group-addon">'+consum+'</span>\
+        <input type="text" rel="'+id+'" name="barCode" class="form-control barCodeConsumCLient"></div></div>';
+
+    }
+    else{
+        tr+= + consum;
+
+    }
+    tr+= (consumed==null ? "" : '<div class="col-lg-12">'+ consumed+'</div>')
+
 
     tr+='</td>\
-    <td>' + consum + '<br>'+consumed+'</td>\
     <td>' + price + '</td>\
     <td>' + exit + '</td>';
     if(exit=='00:00:00')
@@ -435,3 +512,62 @@ function toggleSubmit(option){
 
 
 }
+
+//speciffic only to client page
+$(document).on('click', 'a.client-comments', function() {
+    var id=$(this).attr("rel");
+
+    $(this).addClass("hide");
+    $("textarea.client-comments[rel='"+id+"']").removeClass("hide")
+    $("input.client-comments[rel='"+id+"'][type='button']").removeClass("hide")
+});
+
+$(document).on('click', 'input.client-comments', function() {
+    var id=$(this).attr("rel");
+    var comment= $("a.client-comments[rel='"+id+"']").html();
+console.log("triggered");
+    $("a.client-comments[rel='"+id+"']").removeClass("hide")
+    $("textarea.client-comments[rel='"+id+"']").addClass("hide")
+    $("input.client-comments[rel='"+id+"'][type='button']").addClass("hide")
+    $("textarea.client-comments[rel='"+id+"']").attr('value', $(this).val())
+    updateClientDetails( comment,id);
+
+});
+$(document).on('change', 'textarea.client-comments', function() {
+    var id=$(this).attr("rel");
+    $("a.client-comments[rel='"+id+"']").html($(this).val())
+});
+///finance/client/{clientID}/comment/{comment}
+$("#clientSearchInput").keyup(function () {
+    //split the current value of searchInput
+    var data = this.value.split(" ");
+    //create a jquery object of the rows
+    var jo =$('tbody.clienti').find("tr");
+    if (this.value == "") {
+        jo.show();
+        return;
+    }
+    //hide all the rows
+    jo.hide();
+
+    //Recusively filter the jquery object to get results.
+    jo.filter(function (i, v) {
+        var $t = $(this);
+        for (var d = 0; d < data.length; ++d) {
+            if ($t.is(":contains('" + data[d] + "')")) {
+                return true;
+            }
+        }
+        return false;
+    })
+    //show the rows that match.
+        .show();
+}).focus(function () {
+    this.value = "";
+    $(this).css({
+        "color": "black"
+    });
+    $(this).unbind('focus');
+}).css({
+    "color": "#C0C0C0"
+});

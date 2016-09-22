@@ -1,6 +1,11 @@
 <?
 session_start();
-define(API_URL,'http://daniel.dev/slim/src/public/');
+if($_SERVER['SERVER_NAME']=='daniel.dev'){
+    define(API_URL,'http://daniel.dev/slim/src/public/');
+}else{
+define(API_URL,'http://casutajucariilor.com/unelte/slim/src/public/');
+
+}
 define(Playground,'1');
 ?>
 <!DOCTYPE html>
@@ -34,5 +39,10 @@ define(Playground,'1');
     <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
     <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+<script>
+    var ApiUrl="<?=API_URL?>"
+    var MainPlayground=<?=Playground?>;
+    var addedBy=1;
 
+</script>
 </head>

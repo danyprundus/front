@@ -51,7 +51,8 @@ class finance
     {
         if(empty($_SESSION['params']))
         {
-            $_SESSION['params']=file_get_contents("http://daniel.dev/slim/src/public/finance/params");
+            //$_SESSION['params']=file_get_contents("http://daniel.dev/slim/src/public/finance/params");
+            $_SESSION['params']=file_get_contents("http://casutajucariilor.com/unelte/slim/src/public/finance/params");
         }
         $this->setJson( $_SESSION['params']);
 
@@ -99,6 +100,30 @@ class finance
     public function financeProductAddOptions()
     {
         return $this->getParam(__FUNCTION__);
+    }
+    public  function financeShowDetails($details,$opType){
+        $data=json_decode($details);
+
+       // print_r($this->financeMonetarOptions());
+        switch ($opType){
+            case 'zet':  break;
+            case 'dimineata':
+            case 'seara':
+                echo "<span class=\"label label-info\">Monetar</span><br>";
+                ?>
+                <table class="table table-striped">
+                   <? foreach ($data as $detail_key=>$detail_val):?>
+                       <tr>
+                       <td><?=$detail_key?></td>
+                       <td><?=$detail_val?></td>
+                       </tr>
+                   <? endforeach;?>
+                </table>
+                <?
+                 break;
+
+        }
+
     }
 
 }

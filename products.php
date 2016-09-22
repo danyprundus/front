@@ -35,40 +35,54 @@ $builder = new \builder\builder();
                             <td class="table-responsive col-lg-8">
                                 <table class="table table-striped table-bordered table-hover">
                                     <?php
-                                    $builder->outputClientiHeader($finance->financeProductAddOptions(), ($command=='add'? "productAdd":"productRemove"),array(),"btn-danger",($command=='add'? "Adaug":"Sterg"));
+                                    $tmp=$finance->financeProductAddOptions();
+                              if($command=='sell') unset($tmp['qty']);
+
+                                    $builder->outputClientiHeader($tmp, ($command=='add'? "productAdd":"productRemove"),array(),"btn-danger",($command=='add'? "Adaug":"Cumparat"));
                                     ?>
 
                                 </table>
                                 <div id="extraData"></div>
-                                <p class="bg-primary">Totaluri pe azi </p>
+                                <p class="bg-primary"><?=($command=='add'? "Stocuri":"Situatie Vanzare")?> </p>
                                 <table class="table table-bordered table-hover">
                                     <tr>
 
                                         <th>Nume</th>
-                                        <th>Cantitate in stoc</th>
+                                        <th>Cantitate <?=($command=='add'? "in stoc":"vanduta")?> </th>
                                         <th>Pret per bucata</th>
                                         <th>Total</th>
                                         <th>Cod de bare</th>
                                     </tr>
 
                                 <?
-                                $data=json_decode(file_get_contents(API_URL."finance/inventory/totalsForProducts/".Playground));
+                                $data=json_decode(file_get_contents(API_URL."finance/inventory/totalsForProducts/".Playground.($command=='add'? "":"/vanzari")));
                                 $data=json_decode($data->data);
-
+                                 $grandTotal=0;
                                 foreach ($data as $val):
+                                    $grandTotal+=abs($val->totalPrice);
                                     ?>
-                                    <tr>
+                                    <tr >
 
                                         <td><?=$val->name?></td>
-                                        <td><strong><?=$val->qty?> </strong> bucati</td>
+                                        <td class="<?=($val->qty>0? "bg-primary":"bg-danger")?>" ><strong><?=abs($val->qty)?> </strong> bucati</td>
                                         <td><strong><?=$val->price?> </strong>  lei</td>
-                                        <td><strong><?=$val->totalPrice?> </strong> lei</td>
+                                        <td><strong><?=abs($val->totalPrice)?> </strong> lei</td>
                                         <td><?=$val->barcodeID?>  </td>
                                     </tr>
+
 
                                     <?
                                 endforeach;
                                 ?>
+
+                                    <tr>
+
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td><strong><?=$grandTotal?> </strong> lei</td>
+                                        <td> </td>
+                                    </tr>
                                 </table>
                             </div>
 
