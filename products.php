@@ -44,7 +44,9 @@ $builder = new \builder\builder();
                                 </table>
                                 <div id="extraData"></div>
                                 <p class="bg-primary"><?=($command=='add'? "Stocuri":"Situatie Vanzare")?> </p>
-                                <table class="table table-bordered table-hover">
+                            Cautare <input id="inventorySearchInput" value="">
+
+                <table class="table table-bordered table-hover table-responsive">
                                     <tr>
 
                                         <th>Nume</th>
@@ -55,6 +57,7 @@ $builder = new \builder\builder();
                                     </tr>
 
                                 <?
+
                                 $data=json_decode(file_get_contents(API_URL."finance/inventory/totalsForProducts/".Playground.($command=='add'? "":"/vanzari")));
                                 $data=json_decode($data->data);
                                  $grandTotal=0;

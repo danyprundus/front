@@ -9,6 +9,19 @@ require "classes/builder.php";
 <?php
 $finance= new \finance\finance();
 $builder= new \builder\builder();
+$dateComponents = @getdate();
+
+if($_POST['month']){
+
+    $month=$_POST['month'];
+}
+else{
+    $month = $dateComponents['mon'];
+
+}
+
+$year = $dateComponents['year'];
+
 ?>
 <div id="wrapper">
 
@@ -143,10 +156,6 @@ $builder= new \builder\builder();
                     </div>
                     <!-- /.col-lg-6 (nested) -->
 <?
-$dateComponents = @getdate();
-
-$month = $dateComponents['mon'];
-$year = $dateComponents['year'];
 
 echo build_calendar($month,$year,$dateArray);
 if($_GET['viewdate']){
@@ -190,126 +199,74 @@ $data=json_decode(file_get_contents(API_URL. "finance/monetar/getall/".Playgroun
 
 <!-- /#wrapper -->
 <?php
-function build_calendar($month,$year,$dateArray) {
+function build_calendar($month,$year){
 
-    // Create array containing abbreviations of days of week.
-    $daysOfWeek = array('S','M','T','W','T','F','S');
-    $currentMonthRel="";
-    $key="";
     // What is the first day of the month in question?
     $firstDayOfMonth = @mktime(0,0,0,$month,1,$year);
 
     // How many days does this month contain?
     $numberDays = @date('t',$firstDayOfMonth);
-
-    // Retrieve some information about the first day of the
-    // month in question.
-    $dateComponents = @getdate($firstDayOfMonth);
-
-    // What is the name of the month in question?
-    $monthName = $dateComponents['month'];
-
-    // What is the index value (0-6) of the first day of the
-    // month in question.
-    $dayOfWeek = $dateComponents['wday'];
-
-    // Create the table tag opener and day headers
-    $data=json_decode(file_get_contents(API_URL. "finance/monetar/getZetForMonth/".Playground."/$year".($month<10?"0".$month:$month)));
+    $data=json_decode(file_get_contents(API_URL. "finance/monetar/getMoneyForMonth/".Playground."/$year".($month<10?"0".$month:$month)."/zet"));
     $zetInfo=json_decode(json_encode($data), True);
+
+
+    $data=json_decode(file_get_contents(API_URL. "finance/monetar/getMoneyForMonth/".Playground."/$year".($month<10?"0".$month:$month)."/factura"));
+    $facturaInfo=json_decode(json_encode($data), True);
+
+    $data=json_decode(file_get_contents(API_URL. "finance/monetar/getMoneyForMonth/".Playground."/$year".($month<10?"0".$month:$month)."/bon"));
+    $bonInfo=json_decode(json_encode($data), True);
+
+    $data=json_decode(file_get_contents(API_URL. "finance/monetar/getMoneyForMonth/".Playground."/$year".($month<10?"0".$month:$month)."/retragere"));
+    $retragereInfo=json_decode(json_encode($data), True);
 
     $data=json_decode(file_get_contents(API_URL. "finance/monetar/getCountForMonth/".Playground."/$year".($month<10?"0".$month:$month)));
     $moneyCountInfo=json_decode(json_encode($data), True);
-    $calendar = "<table class='calendar table table-bordered'>";
-    $calendar .= "<caption>$monthName $year</caption>";
-    $calendar .= "<tr>";
+    ?>
 
-    // Create the calendar headers
+    <table class="table table-bordered table-responsive table-striped" >
+        <tr>
+            <td> Schimba Luna
+                <form method="post">
+                <select name="month" onchange="this.form.submit()">
+                    <?for($i=1;$i<=$numberDays;$i++):?>
+                        <option value="<?=$i?>" <? if($month==$i) echo ' selected '?>><?=$i?></option>
+                    <?endfor;?>
 
-    foreach($daysOfWeek as $day) {
-        $calendar .= "<th class='header'>$day</th>";
-    }
+                </select> </form></td>
 
-    // Create the rest of the calendar
+        </tr>
+        <tr>
+            <th>Ziua</th>
+            <th>Z</th>
+            <th>Factura</th>
+            <th>Bon</th>
+            <th>Retragere</th>
+            <th>Monetar Dimineata</th>
+            <th>Monetar Seara</th>
+        </tr>
+        <?php for($i=1;$i<=$numberDays;$i++):
+            $currentDayRel = str_pad($i, 2, "0", STR_PAD_LEFT);
+            $currentMonthRel= ($month<10?"0".$month:$month);
+             $date = "$year-$currentMonthRel-$currentDayRel";
+            $key=$year.$currentMonthRel.$i;
 
-    // Initiate the day counter, starting with the 1st.
+            ?>
+        <tr>
+            <td><a href='financiar.php?viewdate=1&date=<?=$date?>'><?=$i?></a></td>
+            <td><?=$zetInfo[$key];?></td>
+            <td><?=$facturaInfo[$key];?></td>
+            <td><?=$bonInfo[$key];?></td>
+            <td><?=$retragereInfo[$key];?></td>
+            <td><?=@$moneyCountInfo[$key]['dimineata']['max'];?></td>
+            <td><?=@$moneyCountInfo[$key]['seara']['max'];?></td>
 
-    $currentDay = 1;
+        </tr>
 
-    $calendar .= "</tr><tr>";
-
-    // The variable $dayOfWeek is used to
-    // ensure that the calendar
-    // display consists of exactly 7 columns.
-
-    if ($dayOfWeek > 0) {
-        $calendar .= "<td colspan='$dayOfWeek'>&nbsp;</td>";
-    }
-
-    $month = str_pad($month, 2, "0", STR_PAD_LEFT);
-
-    while ($currentDay <= $numberDays) {
-
-        // Seventh column (Saturday) reached. Start a new row.
-
-        if ($dayOfWeek == 7) {
-
-            $dayOfWeek = 0;
-            $calendar .= "</tr><tr>";
-
-        }
-
-        $currentDayRel = str_pad($currentDay, 2, "0", STR_PAD_LEFT);
-
-        $date = "$year-$month-$currentDayRel";
-
-        $calendar .= "<td class='day' rel='$date'><a href='financiar.php?viewdate=1&date=$date'>$currentDay</a><br>";
-
-                       $key=$year.$month.$currentDayRel;
-                        if($zetInfo[$key]>0) {
-                            $calendar .= "<div class='col-lg-12'> <button type=\"button\" class=\"btn btn-success\">Z <span class=\"badge\">";
-                            $calendar .= $zetInfo[$key];
-                            $calendar .= "</span></button></div>" ;
-
-                        }
-                        if($moneyCountInfo[$key]['max']>0) {
-                            $calendar .= "<div class='col-lg-12'><button type=\"button\" class=\"btn btn-info\">Numerar max<span class=\"badge\">";
-                            $calendar .= $moneyCountInfo[$key]['max'];
-                            $calendar .= "</span></button></div>" ;
-
-                        }
-                        if($moneyCountInfo[$key]['min']>0&&$moneyCountInfo[$key]['max']<>$moneyCountInfo[$key]['min']) {
-                            $calendar .= "<div class='col-lg-12'><button type=\"button\" class=\"btn btn-danger\">Numerar min<span class=\"badge\">";
-                            $calendar .= $moneyCountInfo[$key]['min'];
-                            $calendar .= "</span></button></div>" ;
-
-                        }
-                        $calendar.="</td>";
-        // Increment counters
-
-        $currentDay++;
-        $dayOfWeek++;
-
-    }
-
-
-
-    // Complete the row of the last week in month, if necessary
-
-    if ($dayOfWeek != 7) {
-
-        $remainingDays = 7 - $dayOfWeek;
-        $calendar .= "<td colspan='$remainingDays'>&nbsp;</td>";
-
-    }
-
-    $calendar .= "</tr>";
-
-    $calendar .= "</table>";
-
-    return $calendar;
+        <?endfor;?>
+    </table>
+    <?
 
 }
-
 
 require "inc/footer.php";
 ?>

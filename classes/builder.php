@@ -115,7 +115,7 @@ class builder
                 switch ((string)$val->field_type) {
                     case 'dropdown': ?>
                         <select name="<?php echo $key ?>"<? if (in_array($key, $blockedArray)) echo ' disabled ' ?>
-                                class="form-control input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
+                                class="form-con input-lg input-group-lg <?php echo $extraClass . ' ' . $key ?>">
                             <? foreach ($params as $param_key => $param_val): ?>
                                 <option value="<?= $param_val ?>"><?= $param_val ?></option>
                             <?endforeach; ?>

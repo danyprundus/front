@@ -149,61 +149,28 @@ $( document ).ready(function() {
     }
 });
 
-$(".productAdd .barcodeID").blur(function(){
-    toggleSubmit("hide");
-    var barcode=$(this).val();
-    $(this).val("");
 
-    var addedBy=1
-    var Added=0;
-    $.ajax({
-        url: ApiUrl+'finance/inventory/checkProduct/'+MainPlayground+'/'+barcode,
-        type: 'GET',
-        async: false,
-        success: function(data) {
-            var obj = $.parseJSON(data);
-            var op=obj.operation;
+$(".productAdd .barcodeID").keypress(function(e){
+        toggleSubmit("hide");
+        var barcode=$(this).val();
+        $(this).val("");
+        addProduct(barcode, MainPlayground, addedBy, $(".qty").val(), 0);
+})
+$(".productRemove .barcodeID").keypress(function(e){
+    if(e.which == 13) {//Enter key pressed
 
-            if(op==='ok'){
+        toggleSubmit("hide");
+        var barcode = $(this).val();
+        $(this).val("");
+        addProduct(barcode, MainPlayground, addedBy, -1, 0);
+    }
 
-                $("#extraData").html(" Produs: "+$.parseJSON(obj.data).name);
-                $("#extraData").append(" <br>Cantitate "+qtyProduct(MainPlayground,barcode));
-
-            }
-            else {
-
-                $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
-            }
-            toggleSubmit("show");
-            $("tbody.productAdd>tr:nth-child(1)>td:nth-child(3)>#adaug").click(function(){
-                if(op==='ok'){
-                    if(Added==0){
-                        addProduct(barcode,MainPlayground,addedBy,$(".qty").val(),0);
-                    }
-                    Added=1;
-
-                }
-                else {
-                    var name=$("#extraData input[name='name']").val();
-                    var price=$("#extraData input[name='price']").val();
-                    if(name.length>0 & price.length>0){
-                        createProduct(barcode,MainPlayground,addedBy,name,price);
-                    }
-
-
-                }
-                $("#extraData").html("");
-                toggleSubmit("hide");
-
-            })
-            loadProducts(MainPlayground);
-
-        }
-    });
 
 //console.log(jsonArray);
 })
-    $(".productRemove .barcodeID").blur(function(){
+
+
+    $(".productRemove123 .barcodeID").blur(function(){
         toggleSubmit("hide");
         var barcode=$(this).val();
         $(this).val("");
@@ -312,9 +279,12 @@ function addProduct(barcode,playground,addedBy,qty,clientID){
                                 $("#extraData").html("Numele si pretul trebuie completat");
                             }
                         }
-                    });                }
+                    });
+                    location.reload();
+                }
             }
             else {
+                location.reload();
 
                 $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
             }
@@ -366,13 +336,29 @@ function loadClients(playgroundID)
                 total_general=value.total_general;
                 price=value.price;
                 exit=value.exitTime;
-                generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general);
+                exitMinutes=value.exitMinutes;
+                generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general,exitMinutes);
+            });
+
+            $.ajax({
+                url: ApiUrl+'finance/client/'+playgroundID+'/totalByDates',
+                type: 'GET',
+                // dataType: 'json',
+                success: function(data) {
+                    var obj = $.parseJSON(data);
+                    generateClientTRTotal(obj.price,obj.cost);
+
+
+                }
             });
 
 
         }
     });
+
+
     $('.clienti').find('input:text').val('');
+
 }
 
 function loadProducts(playgroundID)
@@ -457,15 +443,30 @@ function updateClientDetails(details,clientID){
 
 
 }
-
-function generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general)
+function generateClientTRTotal(price,cost){
+    var tr=' <tr class=" clientDataTotal" >' +
+        '<td colspan="4"><h3>Total</h3></td>' +
+        '<td >'+cost+'</td>' +
+        '<td  >'+price+'</td>' +
+        '<td  ></td>' +
+        '<td  ></td>' +
+        '</tr>';
+    $(".clienti").append(tr);
+}
+function generateClientTR(id,name,entry,details,consum,price,exit,consumed,total_general,exitMinutes)
 {
     var tr=' <tr class=" clientDataRow row_"' + id + '>\
         <td></td>\
     <td>' + name + '</td>\
     <td>' + entry + '</td>';
     if(exit=='00:00:00'){
-        tr+='<td>' +'<a  class="client-comments" rel="'+id+'">'+details+'</a>'
+        if(details.length>0){
+            tr+='<td>' +'<a  class="client-comments" rel="'+id+'">'+details+'</a>'
+        }else{
+            tr+='<td>' +'<a  class="client-comments" rel="'+id+'">Adauga</a>'
+
+        }
+
 
     }
     else{
@@ -488,8 +489,8 @@ function generateClientTR(id,name,entry,details,consum,price,exit,consumed,total
 
 
     tr+='</td>\
-    <td>' + price + '</td>\
-    <td>' + exit + '</td>';
+    <td class="price">' + price + '</td>\
+    <td>' + exit + '<br>'+exitMinutes+' minute</td>';
     if(exit=='00:00:00')
           tr+='<td><input type="button" class="btn btn-danger inchidClient" onclick="calculateClient('+ id +')" clientID="'+ id +'" value="Inchid"> </td></tr> ';
     else
@@ -538,11 +539,11 @@ $(document).on('change', 'textarea.client-comments', function() {
     $("a.client-comments[rel='"+id+"']").html($(this).val())
 });
 ///finance/client/{clientID}/comment/{comment}
-$("#clientSearchInput").keyup(function () {
+$("#clientSearchInput,#inventorySearchInput").keyup(function () {
     //split the current value of searchInput
     var data = this.value.split(" ");
     //create a jquery object of the rows
-    var jo =$('tbody.clienti').find("tr");
+    var jo =$('tbody').find("tr");
     if (this.value == "") {
         jo.show();
         return;
@@ -571,3 +572,18 @@ $("#clientSearchInput").keyup(function () {
 }).css({
     "color": "#C0C0C0"
 });
+function calculateTotalBasedOnClass(cssClass){
+    var sum = 0;
+// iterate through each td based on class and add the values
+    $("."+cssClass).each(function() {
+
+        var value = $(this).text();
+        console.log($(this).text());
+        // add only if the value is number
+        if(!isNaN(value) && value.length != 0) {
+            sum += parseFloat(value);
+        }
+    });
+    console.log(sum);
+   // return sum;
+}
