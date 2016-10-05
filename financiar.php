@@ -158,6 +158,7 @@ $year = $dateComponents['year'];
 <?
 
 echo build_calendar($month,$year,$dateArray);
+/*
 if($_GET['viewdate']){
 $data=json_decode(file_get_contents(API_URL. "finance/monetar/getall/".Playground."/".$_GET['date']));
 ?>
@@ -181,7 +182,7 @@ $data=json_decode(file_get_contents(API_URL. "finance/monetar/getall/".Playgroun
 
         <?
 }
-}
+}*/
 ?></table>
                     <!-- /.col-lg-6 (nested) -->
                 </div>
@@ -221,6 +222,8 @@ function build_calendar($month,$year){
 
     $data=json_decode(file_get_contents(API_URL. "finance/monetar/getCountForMonth/".Playground."/$year".($month<10?"0".$month:$month)));
     $moneyCountInfo=json_decode(json_encode($data), True);
+
+    $today=date("j",time());
     ?>
 
     <table class="table table-bordered table-responsive table-striped" >
@@ -244,7 +247,7 @@ function build_calendar($month,$year){
             <th>Monetar Dimineata</th>
             <th>Monetar Seara</th>
         </tr>
-        <?php for($i=1;$i<=$numberDays;$i++):
+        <?php for($i=(($today>2)? ($today-1):1);  $i<=(($today<$numberDays)? ($today+1):$numberDays);$i++):
             $currentDayRel = str_pad($i, 2, "0", STR_PAD_LEFT);
             $currentMonthRel= ($month<10?"0".$month:$month);
              $date = "$year-$currentMonthRel-$currentDayRel";

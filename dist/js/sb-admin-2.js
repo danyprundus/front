@@ -72,10 +72,8 @@ $("#financiarForm").submit(function(e){
             });
 
             if(dataArray[0]=='Yes'){
-                console.log('dialog OK');
-                $("#alert-dimissable-text").html("Operatie reusita");
-                $(".alert-dismissable").removeClass("hide");
-
+                alert("Operatie reusita");
+                location.reload();
             }
         }
     });
@@ -104,7 +102,6 @@ $(".clienti #adaug").click(function(){
             if(dataArray[0]=='Yes'){
 
                 loadClients(MainPlayground);
-                console.log('dialog OK');
                 $("#alert-dimissable-text").html("Operatie reusita");
                 $(".alert-dismissable").removeClass("hide");
 
@@ -168,59 +165,6 @@ $(".productRemove .barcodeID").keypress(function(e){
 
 //console.log(jsonArray);
 })
-
-
-    $(".productRemove123 .barcodeID").blur(function(){
-        toggleSubmit("hide");
-        var barcode=$(this).val();
-        $(this).val("");
-
-        var addedBy=1
-        $.ajax({
-            url: ApiUrl+'finance/inventory/checkProduct/'+MainPlayground+'/'+barcode,
-            type: 'GET',
-            async: false,
-            success: function(data) {
-                var obj = $.parseJSON(data);
-                var op=obj.operation;
-
-                if(op==='ok'){
-                    qty= qtyProduct(MainPlayground,barcode);
-
-                    $("#extraData").html("<span class='product-name'>Produs: "+$.parseJSON(obj.data).name)+"</span>";
-                    $("#extraData").append("<span class='product-qty'>Cantitate:"+qty+" </span>");
-
-                    if(qty>0){
-                        toggleSubmit("show");
-                    }
-                    else
-                    {   toggleSubmit("hide");}
-
-
-                }
-                else {
-
-                    $("#extraData").html('<input type="text" name="name" class=" form-control input-lg input-group-lg " placeholder="Nume"><input type="text" name="price" class=" form-control input-lg input-group-lg " placeholder="Pret">');
-                    toggleSubmit("show");
-                }
-
-                $(document).on('click', 'tbody.productRemove>tr:nth-child(1)>td:nth-child(2)>#adaug', function() {
-                    if(op==='ok'){
-                        addProduct(barcode,MainPlayground,addedBy,-1,0);
-                    }
-
-                    $("#extraData").html("");
-                    toggleSubmit("hide");
-                });
-                loadProducts(MainPlayground);
-            }
-        });
-
-//console.log(jsonArray);
-    })
-
-
-
 function qtyProduct(playground,barcode){
 var op=""
 
@@ -417,18 +361,7 @@ $(document).on('change', '.barCodeConsumCLient', function() {
     loadClients(MainPlayground);
 
 });
-/*
-$(document).on('change', '.clientNotes', function() {
-//add a product to a client
-    // Does some stuff and logs the event to the console
-    var value=$(this).val();
-    var clientID=$(this).attr("rel");
 
-    updateClientDetails(value,MainPlayground,addedBy,clientID);
-    loadClients(MainPlayground);
-
-});
-*/
 function updateClientDetails(details,clientID){
     console.log("update");
     $.ajax({
